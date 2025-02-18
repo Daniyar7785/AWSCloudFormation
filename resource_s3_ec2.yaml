@@ -1,0 +1,13 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is the tempalte to ceraete a s3bucket and ec2
+Resources:
+  Daniyars3bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: azamatrauanbucket7777
+  Daniyarec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-053a45fff0a704a47
+      InstanceType: t2.micro

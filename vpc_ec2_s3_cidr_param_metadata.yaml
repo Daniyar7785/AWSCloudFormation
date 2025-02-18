@@ -1,0 +1,90 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is the template to create ec2 vpc s3 subnet cidr range with param/metadata
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Network Configuration"
+        Parameters:
+          - Daniyarvpcparam
+          - Daniyarvpcsubnet
+      - Label:
+          default: "Compute Configuration"
+        Parameters:
+          - InstanceTypeparam
+          - ImageIdparam
+      - Label:
+          default: "Storage Configuration"
+        Parameters:
+          - S3bucketparam
+
+Parameters:
+  S3bucketparam:
+    Type: String
+
+  ImageIdparam:
+    Type: String
+    Default: ami-053a45fff0a704a47
+    AllowedValues:
+      - ami-053a45fff0a704a47
+      - ami-07fa5275316057f54
+    Description: Enter the AMIID
+
+  InstanceTypeparam:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, m1.large. Default is t2.micro
+
+  Daniyarvpcparam:
+    Type: String
+    Default: 10.0.0.0/16
+    AllowedValues:
+      - 10.0.0.0/16
+      - 10.0.1.0/24
+    Description: Enter VPC CIDR
+
+  Daniyarvpcsubnet:
+    Type: String
+
+Resources:
+  Daniyarvpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref Daniyarvpcparam
+      EnableDnsHostnames: True
+      EnableDnsSupport: True
+      Tags:
+        - Key: Project
+          Value: Banking
+
+  Daniyarsubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref Daniyarvpcsubnet
+      Tags:
+        - Key: Project
+          Value: Banking
+      VpcId: !Ref Daniyarvpc
+
+  Daniyars3bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3bucketparam
+      Tags:
+        - Key: Project
+          Value: Banking
+
+  Daniyarec2:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageIdparam
+      InstanceType: t2.micro
+      Tags:
+        - Key: Project
+          Value: Banking

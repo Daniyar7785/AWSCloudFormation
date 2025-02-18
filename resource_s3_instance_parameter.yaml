@@ -1,0 +1,33 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is the tempalte to ceraete a s3bucket/ec2 with parameters
+
+Parameters:
+  ImageIdParameter:
+    Type: String
+    Default: ami-053a45fff0a704a47
+    AllowedValues:
+      - ami-053a45fff0a704a47
+      - ami-07fa5275316057f54
+    Description: Enter AMIID
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: Enter t2.micro, m1.small, m1.large. Default is t2.micro
+  S3bucketnameParameter:
+    Type: String
+
+Resources:
+  Daniyars3bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref S3bucketnameParameter
+  Daniyarec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageIdParameter
+      InstanceType: !Ref InstanceTypeParameter

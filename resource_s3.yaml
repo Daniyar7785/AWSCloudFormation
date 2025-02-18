@@ -1,0 +1,8 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is the tempalte to ceraete a s3bucket
+Resources:
+  Daniyars3bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: dake77850938dake
