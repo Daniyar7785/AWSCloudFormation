@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates an ASG and Launch Template
+
+Parameters:
+  Instancetypeparam:
+    Description: Enter t2.micro, m1.small, m1.large
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+
+  ImageIdparam:
+    Description: Enter AMIID
+    Type: String
+    Default: ami-053a45fff0a704a47
+    AllowedValues:
+      - ami-053a45fff0a704a47
+      - ami-07fa5275316057f54
+
+  PublicKeyMaterialParam:
+    Description: Paste your SSH public key material (e.g., contents of your ~/.ssh/id_rsa.pub)
+    Type: String
+    NoEcho: true
+
+Resources:
+  EC2KeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: MyGeneratedKeyPair
+      KeyType: rsa
+      KeyFormat: pem
+      PublicKeyMaterial: !Ref PublicKeyMaterialParam
+      Tags:
+        - Key: Name
+          Value: MyGeneratedKeyPair
+
+  LaunchTemplateResource:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: WebserverTemplate
+      LaunchTemplateData:
+        ImageId: !Ref ImageIdparam
+        InstanceType: !Ref Instancetypeparam
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            yum update -y
+            yum install -y httpd.x86_64
+            systemctl start httpd
+            systemctl enable httpd
+            echo "hello from dake $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)" > /var/www/html/index.html
+
+  AutoScalingGroupresource:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: Daniyarasg
+      AvailabilityZones:
+        - us-east-1a
+        - us-east-1b
+      DesiredCapacity: 2
+      MaxSize: 2
+      MinSize: 1
+      TargetGroupARNs:
+        - !Ref TargetGroupResource
+      VPCZoneIdentifier:
+        - subnet-0612df0773198c0e4
+        - subnet-0e78e9c9b230bae0c
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplateResource
+        Version: !GetAtt LaunchTemplateResource.LatestVersionNumber
+
+  AppLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Name: DaniyarAppLoadBalancer
+      Subnets:
+        - subnet-0612df0773198c0e4
+        - subnet-0e78e9c9b230bae0c
+      Type: application
+
+  AppLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroupResource
+          Type: forward
+      LoadBalancerArn: !Ref AppLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  TargetGroupResource:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 80
+      Protocol: HTTP
+      TargetType: instance
+      VpcId: vpc-02588a0bdf4f3a8f9
